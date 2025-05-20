@@ -1,0 +1,6 @@
+# Python dependencies for drone control node and analysis
+rclpy
+setuptools
+numpy
+matplotlib
+scipy

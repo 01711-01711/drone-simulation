@@ -1,0 +1,288 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="drone">
+
+  <!-- Gazebo global settings -->
+  <gazebo>
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo> 
+  <gazebo>
+    <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so"/>
+  </gazebo>
+
+  <!-- Define black material to avoid warnings -->
+  <material name="black">
+    <color rgba="0.0 0.0 0.0 1.0"/>
+  </material>
+
+  <!-- Include macros -->
+  <xacro:include filename="$(find drone_description)/urdf/macros.urdf.xacro"/>
+
+  <!-- Root and base structure -->
+  <link name="drone_root"> 
+    <inertial>
+      <mass value="0.3"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.005" iyy="0.005" izz="0.005" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <link name="drone_dummy_link">
+    <inertial>
+      <mass value="0.01"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
+  </link>
+
+  <joint name="drone_dummy_joint" type="fixed">
+    <parent link="drone_root"/>
+    <child link="drone_dummy_link"/>
+  </joint> 
+
+  <joint name="drone_root_joint" type="fixed">
+    <parent link="drone_dummy_link"/>
+    <child link="base_link"/>
+  </joint>
+
+  <link name="base_link">
+    <inertial>
+      <mass value="2.3"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.083206" iyy="0.184061" izz="0.102305" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <mesh filename="package://drone_description/meshes/drone.dae" scale="1 1 1"/>
+      </geometry>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://drone_description/meshes/drone.dae" scale="1 1 1"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- IMU Sensor -->
+  <gazebo reference="base_link">
+    <sensor type="imu" name="imu_sensor">
+      <update_rate>100.0</update_rate>
+      <always_on>true</always_on>
+      <visualize>true</visualize>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0.0</mean><stddev>0.01</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <topic>/imu_plugin/out</topic>
+        <frame_name>base_link</frame_name>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+  <!-- Base -->
+  <xacro:mechanism_link name="base" mesh="base.dae" mass="0.3" ixx="0.001042" iyy="0.001875" izz="0.001042"/>
+  <joint name="base_to_drone" type="fixed">
+    <parent link="base_link"/>
+    <child link="base"/>
+  </joint>
+
+  <!-- Column -->
+  <xacro:mechanism_link name="column" mesh="column.dae" mass="0.4" ixx="0.021286" iyy="0.000292" izz="0.021286"/>
+  <joint name="base_to_column" type="fixed">
+    <parent link="base"/>
+    <child link="column"/>
+  </joint>
+
+  <!-- Slider -->
+  <link name="slider">
+    <visual><geometry><mesh filename="package://drone_description/meshes/slider.dae"/></geometry></visual>
+    <collision><geometry><mesh filename="package://drone_description/meshes/slider.dae"/></geometry></collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.000247" iyy="0.000327" izz="0.000247" ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+  <joint name="column_to_slider" type="prismatic">
+    <parent link="column"/> 
+    <child link="slider"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="100" velocity="1.0" lower="0.0" upper="0.2"/>
+    <dynamics damping="5.0" friction="0.5"/>
+  </joint>
+
+  <gazebo>
+    <plugin name="joint_effort_plugin_column_to_slider" filename="libjoint_effort_plugin.so">
+      <joint_name>column_to_slider</joint_name>
+      <topic_name>/column_to_slider/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+
+  <!-- Arm + Brace macros -->
+  <xacro:arm_brace_pair prefix="ab1_" index="1" parent="slider"/>
+  <xacro:arm_brace_pair prefix="ab2_" index="2" parent="slider"/>
+  <xacro:arm_brace_pair prefix="ab3_" index="3" parent="slider"/>
+  <xacro:arm_brace_pair prefix="ab4_" index="4" parent="slider"/>
+
+  <!-- Plugins for each actuated joint -->
+  <gazebo reference="ab1__brace_1">
+    <plugin name="effort_ab1" filename="libjoint_effort_plugin.so">
+      <joint_name>ab1__slider_to_brace_1_joint</joint_name>
+      <topic_name>/ab1__slider_to_brace_1_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab2__brace_2">
+    <plugin name="effort_ab2" filename="libjoint_effort_plugin.so">
+      <joint_name>ab2__slider_to_brace_2_joint</joint_name>
+      <topic_name>/ab2__slider_to_brace_2_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab3__brace_3">
+    <plugin name="effort_ab3" filename="libjoint_effort_plugin.so">
+      <joint_name>ab3__slider_to_brace_3_joint</joint_name>
+      <topic_name>/ab3__slider_to_brace_3_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab4__brace_4">
+    <plugin name="effort_ab4" filename="libjoint_effort_plugin.so">
+      <joint_name>ab4__slider_to_brace_4_joint</joint_name>
+      <topic_name>/ab4__slider_to_brace_4_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab1__arm_1">
+    <plugin name="effort_arm1" filename="libjoint_effort_plugin.so">
+      <joint_name>ab1__brace_1_to_arm_1_dummy_joint</joint_name>
+      <topic_name>/ab1__brace_1_to_arm_1_dummy_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab2__arm_2">
+    <plugin name="effort_arm2" filename="libjoint_effort_plugin.so">
+      <joint_name>ab2__brace_2_to_arm_2_dummy_joint</joint_name>
+      <topic_name>/ab2__brace_2_to_arm_2_dummy_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab3__arm_3">
+    <plugin name="effort_arm3" filename="libjoint_effort_plugin.so">
+      <joint_name>ab3__brace_3_to_arm_3_dummy_joint</joint_name>
+      <topic_name>/ab3__brace_3_to_arm_3_dummy_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="ab4__arm_4">
+    <plugin name="effort_arm4" filename="libjoint_effort_plugin.so">
+      <joint_name>ab4__brace_4_to_arm_4_dummy_joint</joint_name>
+      <topic_name>/ab4__brace_4_to_arm_4_dummy_joint/effort_command</topic_name>
+    </plugin>
+  </gazebo> 
+  
+  <!-- ROTOR MACRO -->
+  <!-- Rotor Links and Joints -->
+  <xacro:macro name="rotor_link" params="index x y z direction">
+    <link name="rotor_${index}">
+      <inertial>
+        <mass value="0.01"/>
+        <origin xyz="0 0 0"/>
+        <inertia ixx="1e-6" iyy="1e-6" izz="1e-6" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+      <visual>
+        <geometry>
+          <cylinder radius="0.02" length="0.01"/>
+        </geometry>
+        <material name="black"/>
+      </visual>
+      <collision>
+        <geometry>
+          <cylinder radius="0.02" length="0.01"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="rotor${index}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="rotor_${index}"/>
+      <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <limit effort="5.0" velocity="100.0"/>
+      <dynamics damping="0.01" friction="0.01"/>
+    </joint>
+
+    <!-- Apply damping -->
+    <gazebo reference="rotor_${index}">
+      <damping>0.01</damping>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- Custom Thrust Plugin Configuration -->
+  <gazebo>
+    <plugin name="thrust_plugin" filename="libthrust_plugin.so">
+      <rotors>
+        <linkName>rotor_1</linkName>
+        <topicName>/rotor1/thrust</topicName>
+        <thrustCoefficient>3.22e-6</thrustCoefficient>
+        <torqueCoefficient>9.6e-9</torqueCoefficient>
+        <direction>-1.0</direction>
+        <maxForce>30</maxForce>
+      </rotors>
+      <rotors>
+        <linkName>rotor_2</linkName>
+        <topicName>/rotor2/thrust</topicName>
+        <thrustCoefficient>3.22e-6</thrustCoefficient>
+        <torqueCoefficient>9.6e-9</torqueCoefficient>
+        <direction>1.0</direction>
+        <maxForce>30</maxForce>
+      </rotors>
+      <rotors>
+        <linkName>rotor_3</linkName>
+        <topicName>/rotor3/thrust</topicName>
+        <thrustCoefficient>3.22e-6</thrustCoefficient>
+        <torqueCoefficient>9.6e-9</torqueCoefficient>
+        <direction>-1.0</direction>
+        <maxForce>30</maxForce>
+      </rotors>
+      <rotors>
+        <linkName>rotor_4</linkName>
+        <topicName>/rotor4/thrust</topicName>
+        <thrustCoefficient>3.22e-6</thrustCoefficient>
+        <torqueCoefficient>9.6e-9</torqueCoefficient>
+        <direction>1.0</direction>
+        <maxForce>30</maxForce>
+      </rotors>
+    </plugin>
+  </gazebo>
+
+  <!-- Instantiate Rotors -->
+  <!-- Front-Right (CW) -->
+  <xacro:rotor_link index="1" x="0.21091"  y="-0.19391" z="0.0585" direction="-5.0"/>
+  <!-- Front-Left  (CCW) -->
+  <xacro:rotor_link index="2" x="-0.21059" y="-0.19391" z="0.0585" direction="5.0"/>
+  <!-- Back-Left   (CW) -->
+  <xacro:rotor_link index="3" x="-0.18359" y="0.19309"  z="0.0585" direction="-5.0"/>
+  <!-- Back-Right  (CCW) -->
+  <xacro:rotor_link index="4" x="0.18391"  y="0.19309"  z="0.0585" direction="5.0"/> 
+
+
+  <!-- Gazebo plugins -->
+  <gazebo reference="base_link"><damping>0.1</damping></gazebo>
+  <gazebo reference="drone_root"><damping>0.05</damping></gazebo>
+
+  <!-- Arms with gravity and damping -->
+  <gazebo reference="ab1__arm_1"><gravity>true</gravity><damping>0.1</damping></gazebo>
+  <gazebo reference="ab2__arm_2"><gravity>true</gravity><damping>0.1</damping></gazebo>
+  <gazebo reference="ab3__arm_3"><gravity>true</gravity><damping>0.1</damping></gazebo>
+  <gazebo reference="ab4__arm_4"><gravity>true</gravity><damping>0.1</damping></gazebo>
+
+  <!-- Visual materials -->
+  <gazebo reference="base_link"><material>Gazebo/White</material></gazebo>
+  <gazebo reference="base"><material>Gazebo/Turquoise</material></gazebo>
+  <gazebo reference="column"><material>Gazebo/Grey</material></gazebo>
+  <gazebo reference="slider"><material>Gazebo/Turquoise</material></gazebo>
+
+
+</robot>

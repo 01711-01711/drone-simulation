@@ -1,0 +1,40 @@
+# Colcon build artifacts
+build/
+install/
+log/
+
+# ROS 2 specific
+*.pyc
+*.pyo
+__pycache__/
+*.swp
+
+# VS Code settings
+.vscode/
+*.code-workspace
+
+# Python venv
+venv/
+.env/
+.envrc
+
+# Mac system files
+.DS_Store
+
+# Compiled files
+*.so
+*.out
+*.bin
+
+# ROS bag files
+*.db3
+
+# Other
+colcon.meta
+
+# CMake or ROS2 build cache (if present)
+CMakeFiles/
+CMakeCache.txt
+
+# Gazebo logs (if enabled)
+~/.gazebo/log/
