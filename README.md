@@ -4,13 +4,13 @@
 
 ## Project Summary
 
-This project simulates a quadrotor drone equipped with an umbrella-style net mechanism designed to capture other aerial objects in mid-flight. The system is implemented using **ROS 2 Humble**, and **Gazebo Classic**, with flight dynamics integrated via custom thrust plugin and joint torques controlled through joint plugin. Control performance is benchmarked using a Simulink-tuned PID model. The simulation incorporates complete physical modeling: all components of the drone and the capture mechanism are assigned accurate masses and inertias based on real geometry and materials, including the drone body, arms, slider, column, and braces. Gravitational forces, aerodynamic drag, rotor-generated thrust, and torque are simulated using defined coefficients, allowing for realistic behavior under various operating conditions. 
+This project simulates a quadrotor drone equipped with an umbrella-style net mechanism designed to capture other aerial objects in mid-flight. The system is implemented using **ROS 2 Humble**, and **Gazebo Classic**, with flight dynamics integrated via custom thrust plugin and joint torques controlled through joint plugin. Control performance is benchmarked using a Simulink-tuned PID model. The simulation incorporates complete physical modeling: all components of the drone and the capture mechanism are assigned accurate masses and inertias based on real geometry and materials, including the drone body, arms, slider, column, and braces. Gravitational forces, aerodynamic drag, rotor-generated thrust, and torque are simulated using defined coefficients, allowing for realistic behaviour under various operating conditions. 
 
 The primary objective of this simulation is to evaluate the operational feasibility of the drone and its capture mechanism in a physics-based environment, enabling direct comparison with analytical control performance from Simulink. Unlike the idealized PID design space, the Gazebo simulation includes dynamic effects such as shifting mass distributions, controller delays, and interaction forces between moving joints.
 
 The umbrella-style net mechanism is actuated through a prismatic and revolute joint system, allowing for realistic deployment testing during flight. The system can be easily extended to test different payloads by modifying the drone's URDF/Xacro configuration, specifically by adjusting the mass and inertia parameters of the payload or net structure. The simulation supports testing joint limits, observing deployment dynamics, and detecting failures such as instability, oscillations, or excessive mechanical stress. This environment thus bridges theoretical tuning with real-world deployment, offering a highly detailed and extensible platform for drone capture mechanism validation. 
 
-Note: Currently, the simulation setup demonstrates the drone and capture mechanism in a stable hover and landing configuration, with the net mechanism shown in both deployed (open) and retracted (closed) states through modeled behavior. 
+Note: Currently, the simulation setup demonstrates the drone and capture mechanism in a stable configuration, with the net mechanism shown in both deployed (open) and retracted (closed) states through modeled behaviour. 
 
 ---
 
@@ -100,12 +100,6 @@ All meshes were aligned and scaled appropriately in Blender before export
 ---
 
 ## System Requirements
-
-- ROS 2 Humble (Ubuntu 22.04)
-- Gazebo Classic (11.x)
-- `ros_gz` packages and `gazebo_ros_pkgs`
-- `xacro`, `robot_state_publisher`, `joint_state_broadcaster`, `controller_manager`
-- `effort_controllers`, `position_controllers`
 
 To build and run this ROS 2 Gazebo-based drone simulation, the following software and system components are required:
 
